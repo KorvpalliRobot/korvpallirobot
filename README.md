@@ -1,2 +1,2 @@
 # korvpallirobot
-Repository for our Robotex basketball robot.
+Repository meie Robotexi korvpalliroboti jaoks.
