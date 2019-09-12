@@ -31,18 +31,21 @@ def wheel_angular_speed_mainboard_units(wheel_linear_velocity, wheel_speed_to_ma
     return wheel_linear_velocity * wheel_speed_to_mainboard_units
 
 
-def get_motor_speeds(robot_speed_x, robot_speed_y):
+def get_motor_speeds(robot_speed_x, robot_speed_y, rotation):
     rbt_spd = robot_speed(robot_speed_x, robot_speed_y)
     dir_ang = robot_direction_angle(robot_speed_x, robot_speed_y)
     print("Speed:", rbt_spd, "; angle:", degrees(dir_ang))
 
+    rot_constant = wheel_speed_to_mainboard_units
+    rot = rotation * rot_constant
+
     motors = [0, 0, 0]
     motors[0] = wheel_angular_speed_mainboard_units(wheel_linear_velocity(rbt_spd, dir_ang, 120),
-                                                    wheel_speed_to_mainboard_units)
+                                                    wheel_speed_to_mainboard_units) + rot
     motors[1] = wheel_angular_speed_mainboard_units(wheel_linear_velocity(rbt_spd, dir_ang, 0),
-                                                    wheel_speed_to_mainboard_units)
+                                                    wheel_speed_to_mainboard_units) + rot
     motors[2] = wheel_angular_speed_mainboard_units(wheel_linear_velocity(rbt_spd, dir_ang, 240),
-                                                    wheel_speed_to_mainboard_units)
+                                                    wheel_speed_to_mainboard_units) + rot
     return motors
 
 
@@ -100,7 +103,9 @@ while user_input == "":
             x_speed -= speed
             presses += 1
 
-    motors = get_motor_speeds(x_speed, y_speed)
+    # get_motor_speeds takes the X and Y speed as arguments, as well as rotation speed
+    # (positive numbers as clockwise and negative as counterclockwise)
+    motors = get_motor_speeds(x_speed, y_speed, 0)
     send_to_mainboard(motors)
 
     time.sleep(sleep)
