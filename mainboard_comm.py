@@ -71,7 +71,7 @@ def send_to_mainboard(motors):
 
 def send_to_mainboard_debug(motors):
     message = ("sd:" + str(round(motors[0])) + ":" + str(round(motors[1])) + ":" + str(
-        round(motors[2])) + ":0\n").encode("'utf-8")
+        round(motors[2])) + ":200q\n").encode("'utf-8")
     print(message)
 
 
