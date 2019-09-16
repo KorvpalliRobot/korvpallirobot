@@ -4,7 +4,7 @@ import keyboard
 import time
 
 # Initialize serial
-ser = serial.Serial("COM4", 115200)
+ser = serial.Serial("COM3", 115200)
 
 # Constants
 # wheelSpeedToMainboardUnits = gearboxReductionRatio * encoderEdgesPerMotorRevolution /
@@ -74,19 +74,25 @@ def send_to_mainboard_debug(motors):
         round(motors[2])) + ":0\n").encode("'utf-8")
     print(message)
 
-def rotate_to_ball(q_ball):
+
+def rotate_to_ball(q_ball, q_basket):
     ball_x = 0
-    img_center = 1280/2
+    hysteresis = 8
+    img_center = 320
 
     while True:
-        if not q_ball.empty:
-            ball_x = q_ball.get()
+        #if not q_ball.empty:
+        ball_x = q_ball.get()
 
-        if ball_x > img_center:
+        print("BALL_X =", ball_x)
+        if ball_x > img_center + hysteresis:
             motors = get_motor_speeds(0, 0, 0.1)
             send_to_mainboard(motors)
-        else:
+        elif ball_x < img_center - hysteresis:
             motors = get_motor_speeds(0, 0, -0.1)
+            send_to_mainboard(motors)
+        else:
+            motors = get_motor_speeds(0, 0, 0)
             send_to_mainboard(motors)
 
 

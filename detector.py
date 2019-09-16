@@ -3,7 +3,7 @@ import cv2
 import time
 
 # open the camera
-cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 
 # Set the initial time
 aeg = time.time()
@@ -105,23 +105,27 @@ def blob_detector(frame, thresholded, detector):
 
 def find_contours(frame, thresholded):
     contours, _ = cv2.findContours(thresholded, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-
+    cx = 10000
     sorted_contours = sorted(contours, key=cv2.contourArea)
 
     if len(sorted_contours) > 0:
         cv2.drawContours(frame, sorted_contours[-1], -1, (0, 255, 0), 3)
 
-    # image moment
-    m = cv2.moments(sorted_contours[-1])
-    # print(m.keys())
+    try:
+        if len(sorted_contours) > 0:
+            # image moment
+            m = cv2.moments(sorted_contours[-1])
+            # print(m.keys())
 
-    # The centroid point
-    cx = int(m['m10'] / m['m00'])
-    cy = int(m['m01'] / m['m00'])
-    # print(cx)
+            # The centroid point
+            cx = int(m['m10'] / m['m00'])
+            cy = int(m['m01'] / m['m00'])
+            # print(cx)
 
-    # for contour in contours:
-    #     cv2.drawContours(frame, contour, -1, (0, 255, 0), 3)
+            # for contour in contours:
+            #     cv2.drawContours(frame, contour, -1, (0, 255, 0), 3)
+    except:
+        cx = 10000
 
     return frame, cx
 

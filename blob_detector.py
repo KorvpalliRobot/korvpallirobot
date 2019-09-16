@@ -3,7 +3,7 @@ import cv2
 import time
 
 # open the camera
-cap = cv2.VideoCapture(2)
+cap = cv2.VideoCapture(1)
 
 # Set the initial time
 aeg = time.time()
