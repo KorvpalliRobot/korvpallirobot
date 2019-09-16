@@ -3,7 +3,7 @@ import cv2
 import time
 
 # open the camera
-cap = cv2.VideoCapture(2)
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
 # Set the initial time
 aeg = time.time()
@@ -14,6 +14,10 @@ kernel = 9
 # set the kernel size for morphology, the first is a matrix and the second is an integer
 morph = np.ones((5, 5), np.uint8)
 morphvalue = 5
+
+# global values for both the ball's and basket's x position
+ball_x = 0
+basket_x = 0
 
 # Read global variables for detecting the ball.
 try:
@@ -107,10 +111,19 @@ def find_contours(frame, thresholded):
     if len(sorted_contours) > 0:
         cv2.drawContours(frame, sorted_contours[-1], -1, (0, 255, 0), 3)
 
+    # image moment
+    m = cv2.moments(sorted_contours[-1])
+    # print(m.keys())
+
+    # The centroid point
+    cx = int(m['m10'] / m['m00'])
+    cy = int(m['m01'] / m['m00'])
+    # print(cx)
+
     # for contour in contours:
     #     cv2.drawContours(frame, contour, -1, (0, 255, 0), 3)
 
-    return frame
+    return frame, cx
 
 
 # Detector configuration
@@ -121,46 +134,59 @@ blobparams.filterByColor = True
 blobparams.blobColor = 255
 detector = cv2.SimpleBlobDetector_create(blobparams)
 
-while True:
-    # Write the framerate
-    # eelmine_aeg = aeg
-    # aeg = time.time()
-    # framerate = 1 / (aeg - eelmine_aeg)
-    # cv2.putText(frame, str(framerate), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-    # read the image from the camera
-    ret, frame = cap.read()
+# # read one frame to detect image size
+# ret, frame = cap.read()
+# # print image center
+# width = len(frame[0])
+# img_center = width / 2
 
-    # Detect both the ball and the basket in a loop.
+def main(q_ball, q_basket):
+    global ball_x
+    global basket_x
 
-    # Set the thresholding parameters.
-    lowerLimits_ball = np.array([lH, lS, lV])
-    upperLimits_ball = np.array([hH, hS, hV])
-    lowerLimits_basket = np.array([lH_, lS_, lV_])
-    upperLimits_basket = np.array([hH_, hS_, hV_])
+    while True:
+        # Write the framerate
+        # eelmine_aeg = aeg
+        # aeg = time.time()
+        # framerate = 1 / (aeg - eelmine_aeg)
+        # cv2.putText(frame, str(framerate), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-    # outimage = cv2.bitwise_and(frame, frame, mask=thresholded)
+        # read the image from the camera
+        ret, frame = cap.read()
 
-    # Operations concerning the ball.
-    thresholded_ball = thresholding(frame, lowerLimits_ball, upperLimits_ball)
-    #frame = blob_detector(frame, thresholded_ball, detector)
-    frame = find_contours(frame, thresholded_ball)
+        # Detect both the ball and the basket in a loop.
 
-    # Operations concerning the basket.
-    thresholded_basket = thresholding(frame, lowerLimits_basket, upperLimits_basket)
-    #frame = blob_detector(frame, thresholded_basket, detector)
-    frame = find_contours(frame, thresholded_basket)
+        # Set the thresholding parameters.
+        lowerLimits_ball = np.array([lH, lS, lV])
+        upperLimits_ball = np.array([hH, hS, hV])
+        lowerLimits_basket = np.array([lH_, lS_, lV_])
+        upperLimits_basket = np.array([hH_, hS_, hV_])
 
-    cv2.imshow('Frame', frame)
-    cv2.imshow('Thresh Ball', thresholded_ball)
-    cv2.imshow('Thresh Basket', thresholded_basket)
+        # outimage = cv2.bitwise_and(frame, frame, mask=thresholded)
 
-    # Quit the program when 'q' is pressed
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+        # Operations concerning the ball.
+        thresholded_ball = thresholding(frame, lowerLimits_ball, upperLimits_ball)
+        # frame = blob_detector(frame, thresholded_ball, detector)
+        frame, ball_x = find_contours(frame, thresholded_ball)
 
-# When everything done, release the capture
-print('closing program')
+        q_ball.put(ball_x)
+        # Operations concerning the basket.
+        thresholded_basket = thresholding(frame, lowerLimits_basket, upperLimits_basket)
+        # frame = blob_detector(frame, thresholded_basket, detector)
+        frame, basket_x = find_contours(frame, thresholded_basket)
 
-cap.release()
-cv2.destroyAllWindows()
+        cv2.imshow('Frame', frame)
+        cv2.imshow('Thresh Ball', thresholded_ball)
+        cv2.imshow('Thresh Basket', thresholded_basket)
+
+        # Quit the program when 'q' is pressed
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            cap.release()
+            cv2.destroyAllWindows()
+            # When everything done, release the capture
+            print('closing program')
+            return
+
+
+#main()
