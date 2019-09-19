@@ -4,7 +4,8 @@ import pygame
 
 
 # Uncomment if you want to test the program by itself.
-# q = queue.Queue()
+#q = queue.Queue()
+#q_stop = queue.Queue()
 
 # Just a blank Exception class
 class Closer(Exception):
@@ -95,4 +96,4 @@ def gamepad(q, q_stop):
         j.quit()
 
 # Uncomment if you want to test the program by itself.
-# gamepad(q)
+#gamepad(q, q_stop)
