@@ -145,11 +145,20 @@ detector = cv2.SimpleBlobDetector_create(blobparams)
 # width = len(frame[0])
 # img_center = width / 2
 
-def main(q_ball, q_basket):
+def main(q_ball, q_basket, q_stop):
     global ball_x
     global basket_x
 
     while True:
+
+        # Check for stop signals
+        if not q_stop.empty():
+            cap.release()
+            cv2.destroyAllWindows()
+            # When everything done, release the capture
+            print('closing program')
+            return
+
         # Write the framerate
         # eelmine_aeg = aeg
         # aeg = time.time()
@@ -186,6 +195,7 @@ def main(q_ball, q_basket):
 
         # Quit the program when 'q' is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
+            q_stop.put(True)
             cap.release()
             cv2.destroyAllWindows()
             # When everything done, release the capture

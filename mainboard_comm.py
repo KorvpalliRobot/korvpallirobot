@@ -4,8 +4,9 @@ import keyboard
 import time
 from serial.tools import list_ports
 
+
 # Initialize serial
-def get_mainboard_serial_port() :
+def get_mainboard_serial_port():
     ports = list_ports.comports()
     for port in ports:
         try:
@@ -87,22 +88,81 @@ def send_to_mainboard_debug(motors):
     print(message)
 
 
-def rotate_to_ball(q_ball, q_basket):
+# Function for multithread use only. Sends motor speeds to mainboard.
+def send(q_motors, q_stop):
+    while True:
+        # Check for stop signals
+        if not q_stop.empty():
+            return
+
+        # Get speeds for all the motors
+        motors = q_motors.get()
+        # Send this information to our mainboard
+        send_to_mainboard(motors)
+
+
+# Rotation to ball using a proportional controller
+def rotate_to_ball_p(q_ball, q_basket, q_motors, q_stop):
     ball_x = 0
-    hysteresis = 8
     img_center = 320
     speed = 0.05
+    gain = 0.1
 
     while True:
-        #if not q_ball.empty:
+        # Check for stop signals
+        if not q_stop.empty():
+            return
+
+        # if not q_ball.empty:
+        ball_x = q_ball.get()
+
+        # If we calculate the error by NOT using absolute values, we can already determine which way the
+        # robot is going to rotate (what sign the value "error" has).
+        error = ball_x - img_center
+
+        # P-controller algorithm:
+        # output = output + gain*error
+        rot_speed = speed + gain * error
+
+        # Send info to mainboard
+        motors = get_motor_speeds(0, 0, rot_speed)
+        #send_to_mainboard(motors)
+        q_motors.put(motors)
+
+
+# Rotation to ball using a bang-bang controller with hysteresis
+def rotate_to_ball(q_ball, q_basket, q_stop):
+    ball_x = 0
+    # Hysteresis is the "deadzone" of our controller, that is, if the error is +/- hysteresis value,
+    # the robot won't move.
+    hysteresis = 8
+
+    # The center of our camera image
+    img_center = 320
+
+    # Default speed for rotation
+    speed = 0.05
+
+    # Main loop
+    while True:
+        # Check for stop signals
+        if not q_stop.empty():
+            return
+
+        # if not q_ball.empty:
         ball_x = q_ball.get()
 
         print("BALL_X =", ball_x)
+
+        # Controller logic:
+        # if ball is to our right, rotate right;
+        # if it's to our left, rotate left;
+        # if it's kind of in the middle, don't do anything (hysteresis)
         if ball_x > img_center + hysteresis:
             motors = get_motor_speeds(0, 0, speed)
             send_to_mainboard(motors)
         elif ball_x < img_center - hysteresis:
-            motors = get_motor_speeds(0, 0, 0-speed)
+            motors = get_motor_speeds(0, 0, 0 - speed)
             send_to_mainboard(motors)
         else:
             motors = get_motor_speeds(0, 0, 0)
