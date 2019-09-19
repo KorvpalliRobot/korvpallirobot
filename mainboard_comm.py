@@ -91,6 +91,7 @@ def rotate_to_ball(q_ball, q_basket):
     ball_x = 0
     hysteresis = 8
     img_center = 320
+    speed = 0.05
 
     while True:
         #if not q_ball.empty:
@@ -98,10 +99,10 @@ def rotate_to_ball(q_ball, q_basket):
 
         print("BALL_X =", ball_x)
         if ball_x > img_center + hysteresis:
-            motors = get_motor_speeds(0, 0, 0.1)
+            motors = get_motor_speeds(0, 0, speed)
             send_to_mainboard(motors)
         elif ball_x < img_center - hysteresis:
-            motors = get_motor_speeds(0, 0, -0.1)
+            motors = get_motor_speeds(0, 0, 0-speed)
             send_to_mainboard(motors)
         else:
             motors = get_motor_speeds(0, 0, 0)
