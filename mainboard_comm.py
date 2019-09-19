@@ -2,9 +2,21 @@ import serial
 from math import *
 import keyboard
 import time
+from serial.tools import list_ports
 
 # Initialize serial
-ser = serial.Serial("COM3", 115200)
+def get_mainboard_serial_port() :
+    ports = list_ports.comports()
+    for port in ports:
+        try:
+            ser = serial.Serial(port.device, 115200)
+            return ser
+        except:
+            continue
+    raise Exception("Could not find suitable or any USB ports.")
+
+
+ser = get_mainboard_serial_port()
 
 # Constants
 # wheelSpeedToMainboardUnits = gearboxReductionRatio * encoderEdgesPerMotorRevolution /
