@@ -36,8 +36,8 @@ def main():
     # The main loop for our program, use to display values etc
     while True:
         # Check for stop signals
-        stop = q_stop.get()
-        if stop is True:
+        if not q_stop.empty():
+            print("Closing main.py..")
             return
 
         print(q_ball.get())

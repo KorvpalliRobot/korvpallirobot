@@ -80,6 +80,7 @@ def blob_detector(frame, thresholded, detector):
     # BLOB DETECTION
     keypoints = detector.detect(thresholded)
     frame = cv2.drawKeypoints(frame, keypoints, np.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    x = 10000
 
     if len(keypoints) > 0:
         keypoint_largest = keypoints[0]
@@ -99,6 +100,19 @@ def blob_detector(frame, thresholded, detector):
     #     y = int(keypoint.pt[1])
     #     tekst = "x: " + str(x) + " y: " + str(y)
     #     cv2.putText(frame, tekst, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+    return frame, x
+
+def draw_centerline_on_frame(frame, cap) :
+    # x1 = frame center; y1: frame height (top); x2: frame center; y2: frame height (bottom).
+    x1 = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) // 2)
+    y1 = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    x2 = x1
+    y2 = 0
+    # Set line attributes.
+    line_thickness = 1
+    line_color = (255, 0, 0)
+    cv2.line(frame, (x1, y1), (x2, y2), line_color, line_thickness)
 
     return frame
 
@@ -156,7 +170,7 @@ def main(q_ball, q_basket, q_stop):
             cap.release()
             cv2.destroyAllWindows()
             # When everything done, release the capture
-            print('closing program')
+            print('closing detector')
             return
 
         # Write the framerate
@@ -181,13 +195,14 @@ def main(q_ball, q_basket, q_stop):
         # Operations concerning the ball.
         thresholded_ball = thresholding(frame, lowerLimits_ball, upperLimits_ball)
         # frame = blob_detector(frame, thresholded_ball, detector)
-        frame, ball_x = find_contours(frame, thresholded_ball)
+        frame, ball_x = blob_detector(frame, thresholded_ball, detector)
 
         q_ball.put(ball_x)
         # Operations concerning the basket.
         thresholded_basket = thresholding(frame, lowerLimits_basket, upperLimits_basket)
         # frame = blob_detector(frame, thresholded_basket, detector)
         frame, basket_x = find_contours(frame, thresholded_basket)
+        frame = draw_centerline_on_frame(frame, cap)
 
         cv2.imshow('Frame', frame)
         cv2.imshow('Thresh Ball', thresholded_ball)
@@ -199,7 +214,7 @@ def main(q_ball, q_basket, q_stop):
             cap.release()
             cv2.destroyAllWindows()
             # When everything done, release the capture
-            print('closing program')
+            print('closing detector')
             return
 
 

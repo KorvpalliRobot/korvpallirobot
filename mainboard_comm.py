@@ -111,6 +111,7 @@ def rotate_to_ball_p(q_ball, q_basket, q_motors, q_stop):
     while True:
         # Check for stop signals
         if not q_stop.empty():
+            print("Closing rotate_to_ball..")
             return
 
         # if not q_ball.empty:
@@ -131,7 +132,7 @@ def rotate_to_ball_p(q_ball, q_basket, q_motors, q_stop):
 
 
 # Rotation to ball using a bang-bang controller with hysteresis
-def rotate_to_ball(q_ball, q_basket, q_stop):
+def rotate_to_ball(q_ball, q_basket, q_motors, q_stop):
     ball_x = 0
     # Hysteresis is the "deadzone" of our controller, that is, if the error is +/- hysteresis value,
     # the robot won't move.
@@ -147,6 +148,7 @@ def rotate_to_ball(q_ball, q_basket, q_stop):
     while True:
         # Check for stop signals
         if not q_stop.empty():
+            print("Closing rotate_to_ball..")
             return
 
         # if not q_ball.empty:

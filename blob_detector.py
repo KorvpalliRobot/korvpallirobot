@@ -129,7 +129,7 @@ def update_selector(new_value):
 
 
 # Create a window
-cv2.namedWindow("Trackbars", cv2.WINDOW_NORMAL)
+cv2.namedWindow("Trackbars")
 # Attach a trackbar to a window
 cv2.createTrackbar("Ball == 0; basket == 1", "Trackbars", selector, 1, update_selector)
 cv2.createTrackbar("lH", "Trackbars", lH, 255, updatelH)
