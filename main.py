@@ -45,9 +45,15 @@ def main():
         # Check for stop signals
         if not q_stop.empty():
             print("Closing main.py..")
+
+            thread_image_processing.join()
+            thread_rotate_to_ball.join()
+            thread_mainboard_comm.join()
+            thread_manual_control.join()
+
             return
 
-        print(q_ball.get())
+        #print(q_ball.get())
 
 
 main()

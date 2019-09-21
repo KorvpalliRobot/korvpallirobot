@@ -20,7 +20,7 @@ selector = 0
 
 # Read global variables for trackbars from thresh.txt
 try:
-    file = open("thresh.txt")
+    file = open("thresh_ball.txt")
     f = list(file)
     f = [x.strip() for x in f]
     lH = int(f[0])
@@ -145,7 +145,7 @@ cv2.createTrackbar("Morph kernel size", "Trackbars", morphvalue, 19, updatemorph
 
 # Detector configuration
 blobparams = cv2.SimpleBlobDetector_Params()
-blobparams.minArea = 100
+blobparams.minArea = 10
 blobparams.maxArea = 1000000
 blobparams.filterByColor = True
 blobparams.blobColor = 255
@@ -179,7 +179,7 @@ while True:
     thresholded = cv2.morphologyEx(thresholded, cv2.MORPH_CLOSE, morph)
     # thresholded = cv2.erode(thresholded,morph,iterations = 1)
 
-    outimage = cv2.bitwise_and(frame, frame, mask=thresholded)
+    #outimage = cv2.bitwise_and(frame, frame, mask=thresholded)
 
     # Write the framerate
     eelmine_aeg = aeg
@@ -200,7 +200,7 @@ while True:
     cv2.imshow('Thresh', thresholded)
 
     # Display the resulting frame
-    cv2.imshow('Processed', outimage)
+    #cv2.imshow('Processed', outimage)
 
     # Quit the program when 'q' is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):

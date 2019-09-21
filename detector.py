@@ -9,7 +9,7 @@ cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 aeg = time.time()
 
 # set the kernel size for blurring
-kernel = 9
+kernel = 5
 
 # set the kernel size for morphology, the first is a matrix and the second is an integer
 morph = np.ones((5, 5), np.uint8)
@@ -80,7 +80,7 @@ def blob_detector(frame, thresholded, detector):
     # BLOB DETECTION
     keypoints = detector.detect(thresholded)
     frame = cv2.drawKeypoints(frame, keypoints, np.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    x = 10000
+    x = 0
 
     if len(keypoints) > 0:
         keypoint_largest = keypoints[0]
@@ -119,7 +119,7 @@ def draw_centerline_on_frame(frame, cap) :
 
 def find_contours(frame, thresholded):
     contours, _ = cv2.findContours(thresholded, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    cx = 10000
+    cx = 0
     sorted_contours = sorted(contours, key=cv2.contourArea)
 
     if len(sorted_contours) > 0:
@@ -139,14 +139,14 @@ def find_contours(frame, thresholded):
             # for contour in contours:
             #     cv2.drawContours(frame, contour, -1, (0, 255, 0), 3)
     except:
-        cx = 10000
+        cx = 0
 
     return frame, cx
 
 
 # Detector configuration
 blobparams = cv2.SimpleBlobDetector_Params()
-blobparams.minArea = 100
+blobparams.minArea = 10
 blobparams.maxArea = 1000000
 blobparams.filterByColor = True
 blobparams.blobColor = 255
@@ -170,7 +170,7 @@ def main(q_ball, q_basket, q_stop):
             cap.release()
             cv2.destroyAllWindows()
             # When everything done, release the capture
-            print('closing detector')
+            print('Closing detector..')
             return
 
         # Write the framerate
@@ -214,7 +214,7 @@ def main(q_ball, q_basket, q_stop):
             cap.release()
             cv2.destroyAllWindows()
             # When everything done, release the capture
-            print('closing detector')
+            print('Closing detector..')
             return
 
 

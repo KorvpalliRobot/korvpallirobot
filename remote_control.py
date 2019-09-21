@@ -4,14 +4,14 @@ import pygame
 
 
 # Uncomment if you want to test the program by itself.
-q = queue.Queue()
-q_game = queue.Queue()
-q_stop = queue.Queue()
+#q = queue.Queue()
+#q_game = queue.Queue()
+#q_stop = queue.Queue()
 
 # Just a blank Exception class
 class Closer(Exception):
     def __init__(self):
-        print("Good bye!")
+        print("Closing remote control..")
 
 
 # Main program for parsing data from gamepad.
@@ -34,7 +34,7 @@ def gamepad(q, q_game, q_stop):
 
     # How fast is the motor speed; we receive values between -1 and 1, so if we want faster speeds we have to multiply.
     # Maybe we could also change this with gamepad buttons?
-    speed_multiplier = 1
+    speed_multiplier = 0.6
 
     # Game logic state
     state = True
@@ -57,7 +57,12 @@ def gamepad(q, q_game, q_stop):
                         axis = event.axis
                         value = round(event.value, 1)
 
-                        if axis <= 1:
+                        if axis == 0:
+                            if not abs(value) == 0:
+                                speeds[axis] = 0 - value * speed_multiplier
+                            else:
+                                speeds[axis] = 0
+                        elif axis == 1:
                             if not abs(value) == 0:
                                 speeds[axis] = value * speed_multiplier
                             else:
@@ -69,10 +74,10 @@ def gamepad(q, q_game, q_stop):
                                 speeds[2] = 0
 
                         # print("Value:", value)
-                    elif event.type == pygame.JOYBALLMOTION:
-                        print(event.dict, event.joy, event.ball, event.rel)
+                    #elif event.type == pygame.JOYBALLMOTION:
+                        #print(event.dict, event.joy, event.ball, event.rel)
                     elif event.type == pygame.JOYBUTTONDOWN:
-                        print(event.dict, event.joy, event.button, 'pressed')
+                        #print(event.dict, event.joy, event.button, 'pressed')
                         # Close the gamepad program
                         if event.button == 9:
                             raise Closer
@@ -90,10 +95,10 @@ def gamepad(q, q_game, q_stop):
                         if event.button == 6:
                             speed_multiplier -= 0.1
                             print("Speed decreased by 0.1..")
-                    elif event.type == pygame.JOYBUTTONUP:
-                        print(event.dict, event.joy, event.button, 'released')
-                    elif event.type == pygame.JOYHATMOTION:
-                        print(event.dict, event.joy, event.hat, event.value)
+                    #elif event.type == pygame.JOYBUTTONUP:
+                        #print(event.dict, event.joy, event.button, 'released')
+                    #elif event.type == pygame.JOYHATMOTION:
+                        #print(event.dict, event.joy, event.hat, event.value)
 
             # We wont need to check for commands as fast as we can..
             time.sleep(0.1)
@@ -102,7 +107,7 @@ def gamepad(q, q_game, q_stop):
             q.put(speeds)
 
             # Debug info
-            print("SPEEDS:", speeds)
+            #print("SPEEDS:", speeds)
 
     # In case this program being is run from command line
     except KeyboardInterrupt:
@@ -114,4 +119,4 @@ def gamepad(q, q_game, q_stop):
         j.quit()
 
 # Uncomment if you want to test the program by itself.
-gamepad(q, q_game, q_stop)
+#gamepad(q, q_game, q_stop)
