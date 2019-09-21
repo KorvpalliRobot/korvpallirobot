@@ -3,7 +3,7 @@ import cv2
 import time
 
 # open the camera
-cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+cap = cv2.VideoCapture(1)#, cv2.CAP_DSHOW)
 
 # Set the initial time
 aeg = time.time()
@@ -76,7 +76,27 @@ def thresholding(frame, lowerLimits, upperLimits):
     return thresholded
 
 
-def blob_detector(frame, thresholded, detector):
+def circle_detector(frame, thresholded):
+    x = 0
+    # detect circles in the image
+    circles = cv2.HoughCircles(thresholded, cv2.HOUGH_GRADIENT, 1.2, 100)
+    print(circles)
+    # ensure at least some circles were found
+    if circles is not None:
+        # convert the (x, y) coordinates and radius of the circles to integers
+        circles = np.round(circles[0, :]).astype("int")
+
+        # loop over the (x, y) coordinates and radius of the circles
+        for (x, y, r) in circles:
+            # draw the circle in the output image, then draw a rectangle
+            # corresponding to the center of the circle
+            cv2.circle(frame, (x, y), r, (0, 255, 0), 4)
+            cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+
+    return frame, x
+
+
+def blob_detector(frame, thresholded):
     # BLOB DETECTION
     keypoints = detector.detect(thresholded)
     frame = cv2.drawKeypoints(frame, keypoints, np.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
@@ -195,7 +215,7 @@ def main(q_ball, q_basket, q_stop):
         # Operations concerning the ball.
         thresholded_ball = thresholding(frame, lowerLimits_ball, upperLimits_ball)
         # frame = blob_detector(frame, thresholded_ball, detector)
-        frame, ball_x = blob_detector(frame, thresholded_ball, detector)
+        frame, ball_x = blob_detector(frame, thresholded_ball)
 
         q_ball.put(ball_x)
         # Operations concerning the basket.

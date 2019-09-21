@@ -112,7 +112,9 @@ def rotate_to_ball_p(q_ball, q_basket, q_motors, q_game, q_stop):
     ball_x = 0
     img_center = 320
     speed = 0.05
-    gain = 0.5
+    gain = 0.2
+    # When to stop moving (distance from the center)
+    offset = 2
 
     # Variable for game state
     state = True
@@ -132,15 +134,21 @@ def rotate_to_ball_p(q_ball, q_basket, q_motors, q_game, q_stop):
         error = (ball_x - img_center) / img_center
         print("Error:", error)
 
-        # P-controller algorithm:
-        # output = output + gain*error
-        #rot_speed = speed + gain * error
-        rot_speed = copysign(speed, error) + gain * error
+        # Hysteresis control
+        # If error is below a threshold then don't move at all
+        if abs(ball_x - img_center) <= offset:
+            motors = [0, 0, 0]
+        else:
 
-        # Send info to mainboard
-        motors = [0, 0, rot_speed]
-        #motors = get_motor_speeds(0, 0, rot_speed)
-        #send_to_mainboard(motors)
+            # P-controller algorithm:
+            # output = output + gain*error
+            #rot_speed = speed + gain * error
+            rot_speed = copysign(speed, error) + gain * error
+
+            # Send info to mainboard
+            motors = [0, 0, rot_speed]
+            #motors = get_motor_speeds(0, 0, rot_speed)
+            #send_to_mainboard(motors)
 
         # Check to see whether we are on manual control or game logic
         if not q_game.empty():

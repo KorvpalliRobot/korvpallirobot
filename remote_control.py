@@ -57,21 +57,23 @@ def gamepad(q, q_game, q_stop):
                         axis = event.axis
                         value = round(event.value, 1)
 
-                        if axis == 0:
-                            if not abs(value) == 0:
-                                speeds[axis] = 0 - value * speed_multiplier
-                            else:
-                                speeds[axis] = 0
-                        elif axis == 1:
-                            if not abs(value) == 0:
-                                speeds[axis] = value * speed_multiplier
-                            else:
-                                speeds[axis] = 0
-                        elif axis <= 3:
-                            if not abs(value) == 0:
-                                speeds[2] = value * speed_multiplier
-                            else:
-                                speeds[2] = 0
+                        # Only when in manual control
+                        if state is False:
+                            if axis == 0:
+                                if not abs(value) == 0:
+                                    speeds[axis] = 0 - value * speed_multiplier
+                                else:
+                                    speeds[axis] = 0
+                            elif axis == 1:
+                                if not abs(value) == 0:
+                                    speeds[axis] = value * speed_multiplier
+                                else:
+                                    speeds[axis] = 0
+                            elif axis <= 3:
+                                if not abs(value) == 0:
+                                    speeds[2] = value * speed_multiplier
+                                else:
+                                    speeds[2] = 0
 
                         # print("Value:", value)
                     #elif event.type == pygame.JOYBALLMOTION:
