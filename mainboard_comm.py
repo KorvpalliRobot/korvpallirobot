@@ -102,11 +102,14 @@ def send(q_motors, q_stop):
 
 
 # Rotation to ball using a proportional controller
-def rotate_to_ball_p(q_ball, q_basket, q_motors, q_stop):
+def rotate_to_ball_p(q_ball, q_basket, q_motors, q_game, q_stop):
     ball_x = 0
     img_center = 320
     speed = 0.05
     gain = 0.1
+
+    # Variable for game state
+    state = True
 
     while True:
         # Check for stop signals
@@ -128,11 +131,16 @@ def rotate_to_ball_p(q_ball, q_basket, q_motors, q_stop):
         # Send info to mainboard
         motors = get_motor_speeds(0, 0, rot_speed)
         #send_to_mainboard(motors)
-        q_motors.put(motors)
+
+        # Check to see whether we are on manual control or game logic
+        state = q_game.get()
+        if state is True:
+            q_motors.put(motors)
+
 
 
 # Rotation to ball using a bang-bang controller with hysteresis
-def rotate_to_ball(q_ball, q_basket, q_motors, q_stop):
+def rotate_to_ball(q_ball, q_basket, q_game, q_stop):
     ball_x = 0
     # Hysteresis is the "deadzone" of our controller, that is, if the error is +/- hysteresis value,
     # the robot won't move.

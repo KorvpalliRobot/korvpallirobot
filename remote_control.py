@@ -4,8 +4,9 @@ import pygame
 
 
 # Uncomment if you want to test the program by itself.
-#q = queue.Queue()
-#q_stop = queue.Queue()
+q = queue.Queue()
+q_game = queue.Queue()
+q_stop = queue.Queue()
 
 # Just a blank Exception class
 class Closer(Exception):
@@ -15,7 +16,7 @@ class Closer(Exception):
 
 # Main program for parsing data from gamepad.
 # Everything goes to a Queue which can be used in multithreading.
-def gamepad(q, q_stop):
+def gamepad(q, q_game, q_stop):
     # Initialize PyGame
     pygame.init()
 
@@ -34,6 +35,9 @@ def gamepad(q, q_stop):
     # How fast is the motor speed; we receive values between -1 and 1, so if we want faster speeds we have to multiply.
     # Maybe we could also change this with gamepad buttons?
     speed_multiplier = 1
+
+    # Game logic state
+    state = True
 
     # Try is used to make exiting the program easier, that is by using exceptions.
     try:
@@ -72,10 +76,24 @@ def gamepad(q, q_stop):
                         # Close the gamepad program
                         if event.button == 9:
                             raise Closer
+
+                        # Choose between manual control and game logic
+                        if event.button == 8:
+                            state = not state
+                            q_game.put(state)
+                            print("Switched control..")
+
+                        # Change the speed multiplier
+                        if event.button == 7:
+                            speed_multiplier += 0.1
+                            print("Speed increased by 0.1..")
+                        if event.button == 6:
+                            speed_multiplier -= 0.1
+                            print("Speed decreased by 0.1..")
                     elif event.type == pygame.JOYBUTTONUP:
                         print(event.dict, event.joy, event.button, 'released')
-                    # elif event.type == pygame.JOYHATMOTION:
-                    #     print(event.dict, event.joy, event.hat, event.value)
+                    elif event.type == pygame.JOYHATMOTION:
+                        print(event.dict, event.joy, event.hat, event.value)
 
             # We wont need to check for commands as fast as we can..
             time.sleep(0.1)
@@ -96,4 +114,4 @@ def gamepad(q, q_stop):
         j.quit()
 
 # Uncomment if you want to test the program by itself.
-#gamepad(q, q_stop)
+gamepad(q, q_game, q_stop)
