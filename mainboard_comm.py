@@ -111,10 +111,10 @@ def send(q_motors, q_stop):
 def rotate_to_ball_p(q_ball, q_basket, q_motors, q_game, q_stop):
     ball_x = 0
     img_center = 320
-    speed = 0.05
+    speed = 0.04
     gain = 0.2
     # When to stop moving (distance from the center)
-    offset = 2
+    offset = 0.015
 
     # Variable for game state
     state = True
@@ -136,7 +136,7 @@ def rotate_to_ball_p(q_ball, q_basket, q_motors, q_game, q_stop):
 
         # Hysteresis control
         # If error is below a threshold then don't move at all
-        if abs(ball_x - img_center) <= offset:
+        if abs(error) <= offset:
             motors = [0, 0, 0]
         else:
 
@@ -144,6 +144,9 @@ def rotate_to_ball_p(q_ball, q_basket, q_motors, q_game, q_stop):
             # output = output + gain*error
             #rot_speed = speed + gain * error
             rot_speed = copysign(speed, error) + gain * error
+            if abs(rot_speed) < 0.079 :
+                rot_speed = error/abs(error) * 0.079
+            print(speed)
 
             # Send info to mainboard
             motors = [0, 0, rot_speed]
