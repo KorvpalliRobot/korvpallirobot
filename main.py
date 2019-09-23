@@ -17,7 +17,8 @@ def main():
     q_motors = queue.Queue()
     # Holds the information about game logic state (game or manual)
     game_event = threading.Event()
-
+    # By default this should be set so that the robot starts autonomously
+    game_event.set()
     # Stop signal for all threads
     stop_event = threading.Event()
 
@@ -25,7 +26,7 @@ def main():
     thread_image_processing = threading.Thread(name="img", target=detector.main, args=(q_ball, q_basket, stop_event),
                                                daemon=True)
     # Returns motor speeds needed to rotate to ball
-    thread_game_logic = threading.Thread(name="ball", target=mainboard_comm.rotate_to_ball_p,
+    thread_game_logic = threading.Thread(name="ball", target=mainboard_comm.rotate_to_ball,
                                              args=(q_ball, q_basket, q_motors, game_event, stop_event), daemon=True)
     # Controls all the motors
     thread_mainboard_comm = threading.Thread(name="comm", target=mainboard_comm.send,

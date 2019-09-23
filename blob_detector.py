@@ -148,6 +148,7 @@ blobparams = cv2.SimpleBlobDetector_Params()
 blobparams.minArea = 10
 blobparams.maxArea = 1000000
 blobparams.filterByColor = True
+blobparams.filterByCircularity = False
 blobparams.blobColor = 255
 detector = cv2.SimpleBlobDetector_create(blobparams)
 

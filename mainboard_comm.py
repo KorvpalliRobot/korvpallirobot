@@ -10,7 +10,7 @@ def get_mainboard_serial_port():
     ports = list_ports.comports()
     for port in ports:
         try:
-            ser = serial.Serial(port.device, 115200)
+            ser = serial.Serial(port.device, 115200, timeout=0.01)
             return ser
         except:
             continue
@@ -218,7 +218,7 @@ def rotate_to_ball(q_ball, q_basket, q_motors, game_event, stop_event):
     img_center = 320
 
     # Default speed for rotation
-    speed = 0.05
+    speed = 0.07
 
     # Game state
     state = True
@@ -242,14 +242,12 @@ def rotate_to_ball(q_ball, q_basket, q_motors, game_event, stop_event):
             # if it's to our left, rotate left;
             # if it's kind of in the middle, don't do anything (hysteresis)
             if ball_x > img_center + hysteresis:
-                motors = get_motor_speeds(0, 0, speed)
-                send_to_mainboard(motors)
+                motors = [0, 0, speed]
             elif ball_x < img_center - hysteresis:
-                motors = get_motor_speeds(0, 0, 0 - speed)
-                send_to_mainboard(motors)
+                motors = [0, 0, 0-speed]
             else:
-                motors = get_motor_speeds(0, 0, 0)
-                send_to_mainboard(motors)
+                motors = [0, 0, 0]
+            q_motors.put(motors)
 
 
 def main():

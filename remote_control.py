@@ -57,23 +57,22 @@ def gamepad(q, game_event, stop_event):
                         axis = event.axis
                         value = round(event.value, 1)
 
-                        # Only when in manual control
-                        if state is False:
-                            if axis == 0:
-                                if not abs(value) == 0:
-                                    speeds[axis] = 0 - value * speed_multiplier
-                                else:
-                                    speeds[axis] = 0
-                            elif axis == 1:
-                                if not abs(value) == 0:
-                                    speeds[axis] = value * speed_multiplier
-                                else:
-                                    speeds[axis] = 0
-                            elif axis <= 3:
-                                if not abs(value) == 0:
-                                    speeds[2] = value * speed_multiplier
-                                else:
-                                    speeds[2] = 0
+
+                        if axis == 0:
+                            if not abs(value) == 0:
+                                speeds[axis] = 0 - value * speed_multiplier
+                            else:
+                                speeds[axis] = 0
+                        elif axis == 1:
+                            if not abs(value) == 0:
+                                speeds[axis] = value * speed_multiplier
+                            else:
+                                speeds[axis] = 0
+                        elif axis <= 3:
+                            if not abs(value) == 0:
+                                speeds[2] = value * speed_multiplier
+                            else:
+                                speeds[2] = 0
 
                         # print("Value:", value)
                     #elif event.type == pygame.JOYBALLMOTION:
@@ -110,7 +109,9 @@ def gamepad(q, game_event, stop_event):
             time.sleep(0.1)
 
             # Put the motor speeds into our queue, so that other threads can access it.
-            q.put(speeds)
+            # Only when in manual control
+            if state is False:
+                q.put(speeds)
 
             # Debug info
             #print("SPEEDS:", speeds)

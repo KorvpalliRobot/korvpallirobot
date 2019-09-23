@@ -9,11 +9,11 @@ cap = cv2.VideoCapture(1)#, cv2.CAP_DSHOW)
 aeg = time.time()
 
 # set the kernel size for blurring
-kernel = 5
+kernel = 7
 
 # set the kernel size for morphology, the first is a matrix and the second is an integer
-morph = np.ones((5, 5), np.uint8)
-morphvalue = 5
+morphvalue = 7
+morph = np.ones((7, 7), np.uint8)
 
 # global values for both the ball's and basket's x position
 ball_x = 0
@@ -169,6 +169,7 @@ blobparams = cv2.SimpleBlobDetector_Params()
 blobparams.minArea = 10
 blobparams.maxArea = 1000000
 blobparams.filterByColor = True
+blobparams.filterByCircularity = False
 blobparams.blobColor = 255
 detector = cv2.SimpleBlobDetector_create(blobparams)
 
