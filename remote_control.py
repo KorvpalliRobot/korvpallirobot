@@ -1,12 +1,14 @@
 import queue
 import time
 import pygame
+import threading
+import mainboard_comm
 
 
 # Uncomment if you want to test the program by itself.
 #q = queue.Queue()
-#q_game = queue.Queue()
-#q_stop = queue.Queue()
+#game_event = threading.Event()
+#stop_event = threading.Event()
 
 # Just a blank Exception class
 class Closer(Exception):
@@ -78,7 +80,7 @@ def gamepad(q, game_event, stop_event):
                     #elif event.type == pygame.JOYBALLMOTION:
                         #print(event.dict, event.joy, event.ball, event.rel)
                     elif event.type == pygame.JOYBUTTONDOWN:
-                        #print(event.dict, event.joy, event.button, 'pressed')
+                        print(event.dict, event.joy, event.button, 'pressed')
                         # Close the gamepad program
                         if event.button == 9:
                             raise Closer
@@ -100,8 +102,16 @@ def gamepad(q, game_event, stop_event):
                         if event.button == 6:
                             speed_multiplier -= 0.1
                             print("Speed decreased by 0.1..")
-                    #elif event.type == pygame.JOYBUTTONUP:
+
+                        if event.button == 2:
+                            mainboard_comm.thrower_motor(250)
+                            print("Thrower working.")
+                    elif event.type == pygame.JOYBUTTONUP:
                         #print(event.dict, event.joy, event.button, 'released')
+
+                        if event.button == 2:
+                            mainboard_comm.thrower_motor(125)
+                            print("Thrower stopped.")
                     #elif event.type == pygame.JOYHATMOTION:
                         #print(event.dict, event.joy, event.hat, event.value)
 
@@ -126,4 +136,4 @@ def gamepad(q, game_event, stop_event):
         j.quit()
 
 # Uncomment if you want to test the program by itself.
-#gamepad(q, q_game, q_stop)
+#gamepad(q, game_event, stop_event)

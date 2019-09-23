@@ -18,6 +18,7 @@ def get_mainboard_serial_port():
 
 
 ser = get_mainboard_serial_port()
+#ser = serial.Serial("COM3", 115200, timeout=0.01)
 
 # Constants
 # wheelSpeedToMainboardUnits = gearboxReductionRatio * encoderEdgesPerMotorRevolution /
@@ -105,6 +106,13 @@ def send(q_motors, stop_event):
         motors = get_motor_speeds(speeds[0], speeds[1], speeds[2])
         # Send this information to our mainboard
         send_to_mainboard(motors)
+
+
+def thrower_motor(speed):
+    message = ("d:" + str(round(speed)) + "\n").encode("'utf-8")
+    # print(message)
+    ser.write(message)
+    print(message)
 
 
 # Game logic main
