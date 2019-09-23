@@ -95,6 +95,8 @@ def send(q_motors, stop_event):
     while True:
         # Check for stop signals
         if stop_event.is_set():
+            if ser.is_open:
+                ser.close()
             print("Closing mainboard_comm..")
             return
 
@@ -235,6 +237,8 @@ def rotate_to_ball(q_ball, q_basket, q_motors, game_event, stop_event):
     while True:
         # Check for stop signals
         if stop_event.is_set():
+            if ser.is_open:
+                ser.close()
             print("Closing rotate_to_ball..")
             return
 

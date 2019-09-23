@@ -45,13 +45,13 @@ def main():
     while True:
         # Check for stop signals
         if stop_event.is_set():
-            print("Closing main.py..")
 
             thread_image_processing.join()
             thread_game_logic.join()
             thread_mainboard_comm.join()
             thread_manual_control.join()
 
+            print("Closing main.py..")
             return
 
         #print(q_ball.get())
