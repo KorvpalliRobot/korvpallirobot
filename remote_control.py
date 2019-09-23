@@ -16,7 +16,7 @@ class Closer(Exception):
 
 # Main program for parsing data from gamepad.
 # Everything goes to a Queue which can be used in multithreading.
-def gamepad(q, q_game, q_stop):
+def gamepad(q, game_event, stop_event):
     # Initialize PyGame
     pygame.init()
 
@@ -46,7 +46,7 @@ def gamepad(q, q_game, q_stop):
 
             # Check for signals to stop
             # Check for stop signals
-            if not q_stop.empty():
+            if stop_event.is_set():
                 raise Closer
 
             # Wait for some number of commands to be sent, it's inefficient to send data with every command.
@@ -87,7 +87,11 @@ def gamepad(q, q_game, q_stop):
                         # Choose between manual control and game logic
                         if event.button == 8:
                             state = not state
-                            q_game.put(state)
+
+                            if state is True:
+                                game_event.set()
+                            else:
+                                game_event.clear()
                             print("Switched control..")
 
                         # Change the speed multiplier

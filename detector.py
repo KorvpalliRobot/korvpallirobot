@@ -179,14 +179,14 @@ detector = cv2.SimpleBlobDetector_create(blobparams)
 # width = len(frame[0])
 # img_center = width / 2
 
-def main(q_ball, q_basket, q_stop):
+def main(q_ball, q_basket, stop_event):
     global ball_x
     global basket_x
 
     while True:
 
         # Check for stop signals
-        if not q_stop.empty():
+        if stop_event.is_set():
             cap.release()
             cv2.destroyAllWindows()
             # When everything done, release the capture
@@ -217,11 +217,19 @@ def main(q_ball, q_basket, q_stop):
         # frame = blob_detector(frame, thresholded_ball, detector)
         frame, ball_x = blob_detector(frame, thresholded_ball)
 
+        # Put the ball's x-coordinate into a queue for other threads to read
         q_ball.put(ball_x)
+
+
         # Operations concerning the basket.
         thresholded_basket = thresholding(frame, lowerLimits_basket, upperLimits_basket)
         # frame = blob_detector(frame, thresholded_basket, detector)
         frame, basket_x = find_contours(frame, thresholded_basket)
+
+        # Put the basket's x-coordinate into a queue for other threads to read
+        q_basket.put(basket_x)
+
+        # Draw a vertical line at the center of the image (for troubleshooting)
         frame = draw_centerline_on_frame(frame, cap)
 
         cv2.imshow('Frame', frame)
@@ -230,7 +238,7 @@ def main(q_ball, q_basket, q_stop):
 
         # Quit the program when 'q' is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
-            q_stop.put(True)
+            stop_event.set()
             cap.release()
             cv2.destroyAllWindows()
             # When everything done, release the capture

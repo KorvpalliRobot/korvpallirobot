@@ -89,11 +89,11 @@ def send_to_mainboard_debug(motors):
 
 
 # Function for multithread use only. Sends motor speeds to mainboard.
-def send(q_motors, q_stop):
+def send(q_motors, stop_event):
     print("Starting mainboard_comm.")
     while True:
         # Check for stop signals
-        if not q_stop.empty():
+        if stop_event.is_set():
             print("Closing mainboard_comm..")
             return
 
@@ -107,8 +107,54 @@ def send(q_motors, q_stop):
         send_to_mainboard(motors)
 
 
+# Game logic main
+def game(stop_event, game_event):
+
+    # Basically a state machine corresponding to a flow diagram
+    state = "start"
+
+    # Repeat until forced to stop
+    while not stop_event.is_set():
+
+        # Check whether we are on autonomous mode
+        if game_event.is_set():
+            # If we begin our game
+            if state == "start":
+                # Find the closest ball
+                rotate_to_ball()
+                # Move to the next state
+                state = "drive"
+
+            if state == "drive":
+                # Drive to the ball we've found
+                drive_to_ball()
+                state = "align"
+
+            if state == "align":
+                # Align the robot with the ball and the basket
+                align_to_basket()
+                state = "throw"
+
+            if state == "throw":
+                # Throw the ball
+                throw_ball()
+
+
+def drive_to_ball():
+    print(0)
+    # Basically we have to drive until the ball is of some size
+
+
+def align_to_basket():
+    print(0)
+
+
+def throw_ball():
+    print(0)
+
+
 # Rotation to ball using a proportional controller
-def rotate_to_ball_p(q_ball, q_basket, q_motors, q_game, q_stop):
+def rotate_to_ball_p(q_ball, q_basket, q_motors, game_event, stop_event):
     ball_x = 0
     img_center = 320
     speed = 0.04
@@ -121,7 +167,7 @@ def rotate_to_ball_p(q_ball, q_basket, q_motors, q_game, q_stop):
 
     while True:
         # Check for stop signals
-        if not q_stop.empty():
+        if stop_event.is_set():
             print("Closing rotate_to_ball..")
             return
 
@@ -154,17 +200,15 @@ def rotate_to_ball_p(q_ball, q_basket, q_motors, q_game, q_stop):
             #send_to_mainboard(motors)
 
         # Check to see whether we are on manual control or game logic
-        if not q_game.empty():
-            state = q_game.get()
-        if state is True:
+
+        if game_event.is_set():
             #print("To queue:", motors)
             q_motors.put(motors)
             #send_to_mainboard(motors)
 
 
-
 # Rotation to ball using a bang-bang controller with hysteresis
-def rotate_to_ball(q_ball, q_basket, q_motors, q_game, q_stop):
+def rotate_to_ball(q_ball, q_basket, q_motors, game_event, stop_event):
     ball_x = 0
     # Hysteresis is the "deadzone" of our controller, that is, if the error is +/- hysteresis value,
     # the robot won't move.
@@ -182,7 +226,7 @@ def rotate_to_ball(q_ball, q_basket, q_motors, q_game, q_stop):
     # Main loop
     while True:
         # Check for stop signals
-        if not q_stop.empty():
+        if stop_event.is_set():
             print("Closing rotate_to_ball..")
             return
 
@@ -192,9 +236,7 @@ def rotate_to_ball(q_ball, q_basket, q_motors, q_game, q_stop):
         print("BALL_X =", ball_x)
 
         # Check to see whether we are on manual control or game logic
-        if not q_game.empty():
-            state = q_game.get()
-        if state is True:
+        if game_event.is_set():
             # Controller logic:
             # if ball is to our right, rotate right;
             # if it's to our left, rotate left;
