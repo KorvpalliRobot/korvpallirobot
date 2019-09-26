@@ -76,31 +76,11 @@ def thresholding(frame, lowerLimits, upperLimits):
     return thresholded
 
 
-def circle_detector(frame, thresholded):
-    x = 0
-    # detect circles in the image
-    circles = cv2.HoughCircles(thresholded, cv2.HOUGH_GRADIENT, 1.2, 100)
-    print(circles)
-    # ensure at least some circles were found
-    if circles is not None:
-        # convert the (x, y) coordinates and radius of the circles to integers
-        circles = np.round(circles[0, :]).astype("int")
-
-        # loop over the (x, y) coordinates and radius of the circles
-        for (x, y, r) in circles:
-            # draw the circle in the output image, then draw a rectangle
-            # corresponding to the center of the circle
-            cv2.circle(frame, (x, y), r, (0, 255, 0), 4)
-            cv2.rectangle(frame, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-
-    return frame, x
-
-
 def blob_detector(frame, thresholded):
     # BLOB DETECTION
     keypoints = detector.detect(thresholded)
     frame = cv2.drawKeypoints(frame, keypoints, np.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    x = 0
+    x = y = 0
 
     if len(keypoints) > 0:
         keypoint_largest = keypoints[0]
@@ -121,7 +101,7 @@ def blob_detector(frame, thresholded):
     #     tekst = "x: " + str(x) + " y: " + str(y)
     #     cv2.putText(frame, tekst, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-    return frame, x
+    return frame, x, y
 
 def draw_centerline_on_frame(frame, cap) :
     # x1 = frame center; y1: frame height (top); x2: frame center; y2: frame height (bottom).
@@ -216,10 +196,10 @@ def main(q_ball, q_basket, stop_event):
         # Operations concerning the ball.
         thresholded_ball = thresholding(frame, lowerLimits_ball, upperLimits_ball)
         # frame = blob_detector(frame, thresholded_ball, detector)
-        frame, ball_x = blob_detector(frame, thresholded_ball)
+        frame, ball_x, ball_y = blob_detector(frame, thresholded_ball)
 
         # Put the ball's x-coordinate into a queue for other threads to read
-        q_ball.put(ball_x)
+        q_ball.put((ball_x, ball_y))
 
 
         # Operations concerning the basket.

@@ -222,13 +222,14 @@ def rotate_to_ball(q_ball, q_basket, q_motors, game_event, stop_event):
     ball_x = 0
     # Hysteresis is the "deadzone" of our controller, that is, if the error is +/- hysteresis value,
     # the robot won't move.
-    hysteresis = 8
+    hysteresis = 5
 
     # The center of our camera image
     img_center = 320
 
     # Default speed for rotation
-    speed = 0.07
+    rotation_speed = 0.07
+    movement_speed = 1.0
 
     # Game state
     state = True
@@ -243,7 +244,9 @@ def rotate_to_ball(q_ball, q_basket, q_motors, game_event, stop_event):
             return
 
         # if not q_ball.empty:
-        ball_x = q_ball.get()
+        ball_cords = q_ball.get()
+        ball_x = ball_cords[0]
+        ball_y = ball_cords[1]
 
         print("BALL_X =", ball_x)
 
@@ -253,12 +256,17 @@ def rotate_to_ball(q_ball, q_basket, q_motors, game_event, stop_event):
             # if ball is to our right, rotate right;
             # if it's to our left, rotate left;
             # if it's kind of in the middle, don't do anything (hysteresis)
-            if ball_x > img_center + hysteresis:
-                motors = [0, 0, speed]
-            elif ball_x < img_center - hysteresis:
-                motors = [0, 0, 0-speed]
+
+            if ball_x > img_center + hysteresis and ball_y < 384:
+                motors = [0, -movement_speed, rotation_speed]
+            elif ball_x < img_center - hysteresis and ball_y < 384:
+                motors = [0, -movement_speed, -rotation_speed]
+            elif ball_y < 384:
+                if ball_y < 384:
+                    motors = [0, -movement_speed, 0]
             else:
                 motors = [0, 0, 0]
+
             q_motors.put(motors)
 
 
