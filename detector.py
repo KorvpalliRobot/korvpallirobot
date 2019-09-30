@@ -146,7 +146,7 @@ def find_contours(frame, thresholded):
 
 # Detector configuration
 blobparams = cv2.SimpleBlobDetector_Params()
-blobparams.minArea = 10
+blobparams.minArea = 5
 blobparams.maxArea = 1000000
 blobparams.filterByColor = True
 blobparams.filterByCircularity = False

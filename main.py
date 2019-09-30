@@ -14,7 +14,11 @@ def main():
     # Basket's horizontal value (in pixels)
     q_basket = queue.Queue()
     # Holds motor speeds from every thread.
-    q_motors = queue.Queue()
+    q_motors = queue.LifoQueue(5)
+    # Queue for thrower
+    q_thrower = queue.Queue()
+    # Motors Queue Lock
+    lock = threading.Lock()
     # Holds the information about game logic state (game or manual)
     game_event = threading.Event()
     # By default this should be set so that the robot starts autonomously
@@ -26,14 +30,14 @@ def main():
     thread_image_processing = threading.Thread(name="img", target=detector.main, args=(q_ball, q_basket, stop_event),
                                                daemon=True)
     # Returns motor speeds needed to rotate to ball
-    thread_game_logic = threading.Thread(name="ball", target=mainboard_comm.rotate_to_ball,
-                                             args=(q_ball, q_basket, q_motors, game_event, stop_event), daemon=True)
+    thread_game_logic = threading.Thread(name="ball", target=mainboard_comm.angular_movement,
+                                             args=(q_ball, q_basket, q_motors, game_event, stop_event, lock, q_thrower), daemon=True)
     # Controls all the motors
     thread_mainboard_comm = threading.Thread(name="comm", target=mainboard_comm.send,
-                                             args=(q_motors, stop_event), daemon=True)
+                                             args=(q_motors, stop_event, lock, q_thrower), daemon=True)
     # Manual control
     thread_manual_control = threading.Thread(name="manual", target=remote_control.gamepad,
-                                             args=(q_motors, game_event, stop_event), daemon=True)
+                                             args=(q_motors, game_event, stop_event, lock), daemon=True)
 
     # Start the threads
     thread_image_processing.start()

@@ -3,6 +3,7 @@ from math import *
 import keyboard
 import time
 from serial.tools import list_ports
+import mainboard_comm
 
 
 # Initialize serial
@@ -90,7 +91,7 @@ def send_to_mainboard_debug(motors):
 
 
 # Function for multithread use only. Sends motor speeds to mainboard.
-def send(q_motors, stop_event):
+def send(q_motors, stop_event, lock, q_thrower):
     print("Starting mainboard_comm.")
     while True:
         # Check for stop signals
@@ -100,14 +101,20 @@ def send(q_motors, stop_event):
             print("Closing mainboard_comm..")
             return
 
+        if not q_thrower.empty():
+            thrower_motor(q_thrower.get())
+
+        #lock.acquire()
         #print(q_motors.empty())
         # Get speeds for all the motors
         #speeds = [0, 0, 0]
+        #print("QUEUE:", q_motors.qsize())
         speeds = q_motors.get()
         #print(speeds)
         motors = get_motor_speeds(speeds[0], speeds[1], speeds[2])
         # Send this information to our mainboard
         send_to_mainboard(motors)
+        #lock.release()
 
 
 def thrower_motor(speed):
@@ -212,28 +219,40 @@ def rotate_to_ball_p(q_ball, q_basket, q_motors, game_event, stop_event):
         # Check to see whether we are on manual control or game logic
 
         if game_event.is_set():
-            #print("To queue:", motors)
-            q_motors.put(motors)
-            #send_to_mainboard(motors)
+
+            with q_motors:
+                q_motors.notifyAll()
+                #print("To queue:", motors)
+                q_motors.append(motors)
+                #send_to_mainboard(motors)
+
+def rotate_to_basket(q_basket, q_motors):
+    print()
 
 
 # Currently calculates only movement angle.
-# Movement values currently would be true if looking at a mirrored image.
-def angular_movement():
-    ball_x = 0
+# Movement itself is off, but don't know why. The angle is okay.
+def angular_movement(q_ball, q_basket, q_motors, game_event, stop_event, lock, q_thrower):
     # Hysteresis is the "deadzone" of our controller, that is, if the error is +/- hysteresis value,
     # the robot won't move.
-    hysteresis = 5
+    hysteresis = 7
 
     # The center of our camera image
     img_center = 320
 
-    # Default speed for rotation
-    rotation_speed = 0.07
-    movement_speed = 1.0
+    # Default speed for rotation and movement
+    rotation_speed = 0.03
+    movement_speed = 0.09
+    # Töötav variant:
+    # rot = 0.05
+    # mov = 0.09
 
     # Game state
     state = True
+
+    # Basket or ball
+    find_ball = True
+    counter = 0
 
     # Main loop
     while True:
@@ -241,15 +260,22 @@ def angular_movement():
         if stop_event.is_set():
             if ser.is_open:
                 ser.close()
-            print("Closing rotate_to_ball..")
+            print("Closing angular_movement..")
             return
 
         # if not q_ball.empty:
         ball_cords = q_ball.get()
-        ball_x = img_center - ball_cords[0]
+        ball_x = ball_cords[0]
         ball_y = ball_cords[1]
 
-        print("BALL_X =", ball_x)
+        basket_x = q_basket.get()
+
+        #print("Counter:", counter)
+        if counter >= 15:
+            counter = 0
+            find_ball = not find_ball
+
+        #print("BALL: (" + str(ball_x) + "; " + str(ball_y) + ")")
 
         # Check to see whether we are on manual control or game logic
         if game_event.is_set():
@@ -258,16 +284,63 @@ def angular_movement():
             # if it's to our left, rotate left;
             # if it's kind of in the middle, don't do anything (hysteresis)
 
-            x_speed = img_center - ball_x
-            y_speed = ball_y
-            rda = degrees(robot_direction_angle(x_speed, y_speed))
-            print(rda)
-            wheel_120 = wheel_linear_velocity(movement_speed, rda, 120)
-            wheel_0 = wheel_linear_velocity(movement_speed, rda, 0)
-            wheel_240 = wheel_linear_velocity(movement_speed, rda, 240)
-            motors = [wheel_120, wheel_0, wheel_240]
+            if find_ball:
+                if ball_x > img_center:
+                    sign = 1
+                else:
+                    sign = -1
 
+                if ball_y > 350:
+                    if abs(img_center - ball_x) < hysteresis:
+                        motors = [0, 0, 0]
+                        counter += 1
+                        #find_ball = False
+                    else:
+                        counter = 0
+                        motors = [0, 0, sign * rotation_speed]
+                else:
+                    # Field of view ~ 90 degrees
+                    # 45 is in the middle
+                    # So we can convert pixels to degrees:
+                    # ball_degrees = ball_position compared to image center divided by
+                    # a constant, which is the ration between pixels and degrees
+                    ball_degrees = (ball_x - img_center) / 7.11
+                    ball_degrees_rad = radians(ball_degrees)
+
+                    # Define y_speed as constant, because we always need to move forward
+                    # Then based on the angle we can calculate the x_speed
+                    y_speed = movement_speed * 1
+                    x_speed = tan(ball_degrees_rad) * y_speed
+
+                    motors = [-x_speed, -y_speed, 0]
+
+            else:
+                if basket_x > img_center:
+                    sign = 1
+                else:
+                    sign = -1
+
+                if abs(img_center - basket_x) < hysteresis:
+                    motors = [0, 0, 0]
+                    if counter > 10:
+                        motors = [0, -0.5, 0]
+                        q_thrower.put(250)
+
+                        #counter = 0
+                    else:
+                        counter += 1
+
+                    #find_ball = True
+                else:
+                    counter = 0
+                    #send_to_mainboard([0, 10, 0])
+                    motors = [sign * movement_speed, 0, sign * rotation_speed]
+
+            #lock.acquire()
+            while not q_motors.empty():
+                dump = q_motors.get()
             q_motors.put(motors)
+            #lock.release()
 
 
 # Rotation and movement towards ball using a bang-bang controller with hysteresis
@@ -310,10 +383,10 @@ def rotate_to_ball(q_ball, q_basket, q_motors, game_event, stop_event):
             # if it's to our left, rotate left;
             # if it's kind of in the middle, don't do anything (hysteresis)
 
-            if ball_x > img_center :
-                sign = 1;
+            if ball_x > img_center:
+                sign = 1
             else:
-                sign = -1;
+                sign = -1
 
             if ball_y > 384:
                 if abs(img_center - ball_x) < hysteresis:

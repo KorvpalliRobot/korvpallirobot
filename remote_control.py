@@ -18,7 +18,7 @@ class Closer(Exception):
 
 # Main program for parsing data from gamepad.
 # Everything goes to a Queue which can be used in multithreading.
-def gamepad(q, game_event, stop_event):
+def gamepad(q, game_event, stop_event, lock):
     # Initialize PyGame
     pygame.init()
 
@@ -36,7 +36,7 @@ def gamepad(q, game_event, stop_event):
 
     # How fast is the motor speed; we receive values between -1 and 1, so if we want faster speeds we have to multiply.
     # Maybe we could also change this with gamepad buttons?
-    speed_multiplier = 0.6
+    speed_multiplier = 0.3
 
     # Game logic state
     state = True
@@ -121,7 +121,9 @@ def gamepad(q, game_event, stop_event):
             # Put the motor speeds into our queue, so that other threads can access it.
             # Only when in manual control
             if state is False:
+                #lock.acquire()
                 q.put(speeds)
+                #lock.release()
 
             # Debug info
             #print("SPEEDS:", speeds)
